@@ -5,36 +5,12 @@ const startBtn = document.getElementById("startButton");
 canvas.width = 300;
 canvas.height = 600;
 
-let particles = [];
 let started = false;
 let startTime = null;
-let duration = 60000; // 1 minute
-let lastTimestamp = null;
+let duration = 60000;
 
-// Positions
-const topSandStartHeight = 100;
-let topSandHeight = topSandStartHeight;
-let bottomSandHeight = 0;
-
-function drawFrame() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  drawGlass();
-  drawSand();
-  updateParticles();
-  drawParticles();
-
-  if (started) {
-    const elapsed = Date.now() - startTime;
-    if (elapsed < duration) {
-      const progress = elapsed / duration;
-      topSandHeight = topSandStartHeight * (1 - progress);
-      bottomSandHeight = 80 * progress; // triangle height
-      if (Math.random() < 0.7) createParticles(2);
-      requestAnimationFrame(drawFrame);
-    }
-  }
-}
+let topProgress = 1;     // 1 = full, 0 = empty
+let bottomProgress = 0;  // 0 = empty, 1 = full
 
 function drawGlass() {
   ctx.strokeStyle = "#333";
@@ -50,63 +26,57 @@ function drawGlass() {
 }
 
 function drawSand() {
-  // Top sand (rectangle that shrinks)
   ctx.fillStyle = "goldenrod";
-  ctx.fillRect(100, 100, 100, topSandHeight);
 
-  // Bottom sand (triangle that grows)
-  ctx.beginPath();
-  ctx.moveTo(120, 500);
-  ctx.lineTo(180, 500);
-  ctx.lineTo(150, 500 - bottomSandHeight);
-  ctx.closePath();
-  ctx.fill();
-}
+  // Top sand (inverted triangle)
+  if (topProgress > 0) {
+    ctx.beginPath();
+    ctx.moveTo(100, 120);
+    ctx.lineTo(200, 120);
+    ctx.lineTo(150, 120 + 100 * topProgress);
+    ctx.closePath();
+    ctx.fill();
+  }
 
-function createParticles(count) {
-  for (let i = 0; i < count; i++) {
-    particles.push({
-      x: 150 + Math.random() * 4 - 2,
-      y: 290 + Math.random() * 10,
-      vx: Math.random() * 0.5 - 0.25,
-      vy: 1 + Math.random() * 1,
-      life: 50
-    });
+  // Bottom sand (triangle growing up)
+  if (bottomProgress > 0) {
+    ctx.beginPath();
+    ctx.moveTo(120, 500);
+    ctx.lineTo(180, 500);
+    ctx.lineTo(150, 500 - 80 * bottomProgress);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Optional: stream of sand
+  if (started && topProgress > 0) {
+    ctx.fillRect(148.5, 300, 3, 20);
   }
 }
 
-function updateParticles() {
-  particles.forEach(p => {
-    p.vy += 0.1; // gravity
-    p.x += p.vx;
-    p.y += p.vy;
-    p.life -= 1;
+function drawFrame() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawGlass();
+  drawSand();
 
-    // Stop at top of pile
-    if (p.y > 500 - bottomSandHeight) {
-      p.vx = 0;
-      p.vy = 0;
+  if (started) {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    topProgress = 1 - progress;
+    bottomProgress = progress;
+
+    if (progress < 1) {
+      requestAnimationFrame(drawFrame);
     }
-  });
-  particles = particles.filter(p => p.life > 0);
-}
-
-function drawParticles() {
-  ctx.fillStyle = "goldenrod";
-  particles.forEach(p => {
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
-    ctx.fill();
-  });
+  }
 }
 
 function startTimer() {
   if (started) return;
   started = true;
   startTime = Date.now();
-  topSandHeight = topSandStartHeight;
-  bottomSandHeight = 0;
-  particles = [];
+  topProgress = 1;
+  bottomProgress = 0;
   drawFrame();
 }
 
@@ -116,7 +86,6 @@ function setupOrientationListener() {
       startTimer();
     } else if (event.beta > -30 && event.beta < 30) {
       started = false;
-      particles = [];
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawGlass();
       drawSand();
