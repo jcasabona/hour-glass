@@ -9,23 +9,11 @@ let started = false;
 let startTime = null;
 let duration = 60000;
 
-let topProgress = 1;     // 1 = full, 0 = empty
-let bottomProgress = 0;  // 0 = empty, 1 = full
-
-function drawGlass() {
-  ctx.strokeStyle = "#333";
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(50, 50);
-  ctx.lineTo(150, 300);
-  ctx.lineTo(250, 50);
-  ctx.moveTo(50, 550);
-  ctx.lineTo(150, 300);
-  ctx.lineTo(250, 550);
-  ctx.stroke();
-}
+let topProgress = 1;
+let bottomProgress = 0;
 
 function drawSand() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "goldenrod";
 
   // Top sand (inverted triangle)
@@ -48,15 +36,13 @@ function drawSand() {
     ctx.fill();
   }
 
-  // Optional: stream of sand
+  // Sand stream connecting top and bottom
   if (started && topProgress > 0) {
-    ctx.fillRect(148.5, 300, 3, 20);
+    ctx.fillRect(148.5, 220, 3, 280);
   }
 }
 
 function drawFrame() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawGlass();
   drawSand();
 
   if (started) {
@@ -86,8 +72,6 @@ function setupOrientationListener() {
       startTimer();
     } else if (event.beta > -30 && event.beta < 30) {
       started = false;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawGlass();
       drawSand();
     }
   });
@@ -113,5 +97,4 @@ startBtn.addEventListener("click", async () => {
   }
 });
 
-drawGlass();
 drawSand();
