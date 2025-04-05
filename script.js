@@ -1,12 +1,13 @@
 const canvas = document.getElementById('hourglass');
 const ctx = canvas.getContext('2d');
+const startBtn = document.getElementById('startButton');
 
 canvas.width = 300;
 canvas.height = 600;
 
 let particles = [];
 let started = false;
-let startTime;
+let startTime = null;
 
 function drawHourglass() {
   ctx.strokeStyle = '#333';
@@ -35,7 +36,7 @@ function createParticles(count) {
 
 function updateParticles() {
   particles.forEach(p => {
-    p.vy += 0.1; // gravity
+    p.vy += 0.1;
     p.x += p.vx;
     p.y += p.vy;
     p.life -= 1;
@@ -71,14 +72,37 @@ function startTimer() {
   animate();
 }
 
-window.addEventListener('deviceorientation', (event) => {
-  if (event.beta < -150 || event.beta > 150) {
-    startTimer();
-  } else if (event.beta > -30 && event.beta < 30) {
-    started = false;
-    particles = [];
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawHourglass();
+function setupOrientationListener() {
+  window.addEventListener('deviceorientation', (event) => {
+    if (event.beta < -150 || event.beta > 150) {
+      startTimer();
+    } else if (event.beta > -30 && event.beta < 30) {
+      started = false;
+      particles = [];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawHourglass();
+    }
+  });
+}
+
+startBtn.addEventListener('click', async () => {
+  if (
+    typeof DeviceMotionEvent !== 'undefined' &&
+    typeof DeviceMotionEvent.requestPermission === 'function'
+  ) {
+    try {
+      const response = await DeviceMotionEvent.requestPermission();
+      if (response === 'granted') {
+        setupOrientationListener();
+        startBtn.style.display = 'none';
+      }
+    } catch (e) {
+      alert('Permission denied or failed');
+    }
+  } else {
+    // Not iOS or doesn't require permission
+    setupOrientationListener();
+    startBtn.style.display = 'none';
   }
 });
 
