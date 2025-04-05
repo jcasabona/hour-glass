@@ -17,3 +17,17 @@ canvas {
   border-radius: 12px;
   box-shadow: 0 0 20px rgba(0,0,0,0.1);
 }
+
+#startButton {
+  position: absolute;
+  top: 20px;
+  padding: 12px 20px;
+  font-size: 18px;
+  z-index: 10;
+  background: goldenrod;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+}
